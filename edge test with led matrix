@@ -1,0 +1,62 @@
+import processing.video.*;
+import gab.opencv.*;
+import processing.serial.*;
+import java.awt.Rectangle;
+
+Capture video;
+OpenCV opencv;
+Serial myPort;
+PImage img;
+int scaleFactor = 10; // Adjust based on your lightboard's resolution
+
+void setup() {
+  size(640, 480);
+  video = new Capture(this, 640, 480);
+  opencv = new OpenCV(this, 640, 480);
+  video.start();
+  
+  // Initialize Serial Communication with Arduino/Raspberry Pi
+  String portName = Serial.list()[1]; // Adjust the index to match your port
+  myPort = new Serial(this, portName, 9600);
+  
+  // Initialize the image to match your RGB lightboard's resolution
+  img = createImage(27, 24, RGB); // Adjust size to match lightboard
+}
+
+void draw() {
+  if (video.available()) {
+    video.read();
+  }
+  
+  // Edge Detection
+  opencv.loadImage(video);
+  opencv.findCannyEdges(20, 75);
+  PImage edges = opencv.getSnapshot();
+  
+  // Scale down the edge image to match the lightboard's resolution
+  img.copy(edges, 0, 0, edges.width, edges.height, 0, 0, img.width, img.height);
+  img.updatePixels();
+  
+  // Display the scaled image (Optional, for debugging)
+  image(img, 0, 0, width, height);
+  
+  // Send the image data over Serial
+  sendImageData(img);
+}
+
+void sendImageData(PImage img) {
+  // Example function to serialize and send image data
+  // This is a placeholder - you'll need to implement data conversion based on your lightboard's protocol
+  img.loadPixels();
+  for (int i = 0; i < img.pixels.length; i++) {
+    // Convert pixel color to your data format and send it
+    // For example, sending RGB values separately:
+    myPort.write(red(img.pixels[i]));   // Send red component
+    myPort.write(green(img.pixels[i])); // Send green component
+    myPort.write(blue(img.pixels[i]));  // Send blue component
+  }
+}
+
+void captureEvent(Capture c) {
+  c.read();
+}
