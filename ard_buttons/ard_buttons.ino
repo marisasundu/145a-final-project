@@ -22,12 +22,12 @@ int col;  // recieving color data now
 
 int pixels[27 * 24];  //change to vars for readability; error
 
-#define SERIAL_SIZE_RX 1024
+// #define SERIAL_SIZE_RX 512
 
 void setup() {
   pinMode(ledPin, OUTPUT);  // Set pin as OUTPUT
-  Serial.begin(9600);       // Start Serial communication at 9600 bps
-  Serial.setRxBufferSize(SERIAL_SIZE_RX);
+  Serial.begin(19200);       // Start Serial communication at 9600 bps
+  // Serial.setRxBufferSize(SERIAL_SIZE_RX);
                             //  strip.setPixelColor(10, 7, 0,255,200);
 
   strip.begin();
