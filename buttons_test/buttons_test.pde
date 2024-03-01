@@ -32,7 +32,7 @@ void setup()
   background(255);
   //pixelDensity(2);
   String portName = Serial.list()[1]; //change the 0 to a 1 or 2 etc. to match your port
-  myPort = new Serial(this, portName, 115200);
+  myPort = new Serial(this, portName, 9600);
 }
 
 void draw() {
@@ -56,18 +56,21 @@ void draw() {
 
   if (mousePressed) //if we clicked in the window
   {
-    print("sent!");
-    //char red = 0;
+    println("sent!");
+    char red = (char)0;
+    //print(red);
     
     for (int i = 0; i < img.width; i++) {
       for (int j = 0; j < img.height; j++) {
-        //if (img.pixels[i+j*img.width] == 100) {
-        //  red = (char) 100;//(( img.pixels[i + j*img.width] >> 16 & 0xFF) >> 1);
-        //}
-        //else {
-        //  red = (char) 10;
-        //}
-        char red = (char) 100;//(( img.pixels[i + j*img.width] >> 16 & 0xFF) >> 1);
+        if (img.pixels[i+j*img.width] == color(100)) {
+          red = (char) 100;//(( img.pixels[i + j*img.width] >> 16 & 0xFF) >> 1);
+          //print("x");
+        }
+        else {
+          red = (char) 0;
+          //print("o");
+        }
+        //char red = (char) 100;//(( img.pixels[i + j*img.width] >> 16 & 0xFF) >> 1);
         myPort.write(red);
         //print(red);
 
@@ -102,9 +105,8 @@ void draw() {
         if (mousePressed) {
           if (mouseX >= i*scaleFactor && mouseX < i*scaleFactor+scaleFactor && mouseY >= j*scaleFactor && mouseY < j*scaleFactor+scaleFactor) {
             img.pixels[i + j*img.width] = color(100);
-
-           
-          }
+            print(i,j);
+          }       
         }
       }
     }

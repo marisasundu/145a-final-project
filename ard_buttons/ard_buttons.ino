@@ -22,11 +22,11 @@ int col;  // recieving color data now
 
 int pixels[27 * 24];  //change to vars for readability; error
 
-#define SERIAL_SIZE_RX 2048
+#define SERIAL_SIZE_RX 1024
 
 void setup() {
   pinMode(ledPin, OUTPUT);  // Set pin as OUTPUT
-  Serial.begin(115200);       // Start Serial communication at 9600 bps
+  Serial.begin(9600);       // Start Serial communication at 9600 bps
   Serial.setRxBufferSize(SERIAL_SIZE_RX);
                             //  strip.setPixelColor(10, 7, 0,255,200);
 
@@ -80,7 +80,7 @@ void loop() {
 }
 
 void updateGrid(const char* data) {
-  
+  Serial.println("UPDATING GRID!");
   for (int i = 0; i < ledWidth; i++) {
     for (int j = 0; j < ledHeight; j++) {
       col = data[i + j*ledWidth];
@@ -104,7 +104,7 @@ void gridBuffer(const byte inByte) {
 
     default:
       if (input_pos < (PIXEL_LENGTH - 1)) {
-        input_line[input_pos++] = inByte;
+        input_line[input_pos++] = (char) inByte; // cast to char since Processing sends char
       }
       break;
   }
