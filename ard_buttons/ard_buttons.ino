@@ -26,7 +26,7 @@ int pixels[27 * 24];  //change to vars for readability; error
 
 void setup() {
   pinMode(ledPin, OUTPUT);  // Set pin as OUTPUT
-  Serial.begin(19200);       // Start Serial communication at 9600 bps
+  Serial.begin(112500);       // Start Serial communication at 9600 bps
   // Serial.setRxBufferSize(SERIAL_SIZE_RX);
                             //  strip.setPixelColor(10, 7, 0,255,200);
 
@@ -84,8 +84,18 @@ void updateGrid(const char* data) {
   for (int i = 0; i < ledWidth; i++) {
     for (int j = 0; j < ledHeight; j++) {
       col = data[i + j*ledWidth];
-      pixels[i + j * ledWidth] = col;  // is this array even necessary? could just read data directly into 2D
-      strip.setPixelColor(i, j, col, 0, col);
+      // pixels[i + j * ledWidth] = col;  // is this array even necessary? could just read data directly into 2D
+      if (col == char(150)){
+        strip.setPixelColor(i, j, col, 0, 0);
+
+      }
+      else if (col == char(100)){
+        strip.setPixelColor(i, j, 0, 0, col);
+
+      }
+      else{
+        strip.setPixelColor(i,j,0,0,0);
+      }
     }
   }
   Serial.println (data);

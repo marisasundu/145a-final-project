@@ -4,7 +4,8 @@ References:
  - sparkfun tutorial for serial communication between Processing and Arduino: https://learn.sparkfun.com/tutorials/connecting-arduino-to-processing/all#from-processing
  - cotterjk on stack overflow for pixel magnification: https://stackoverflow.com/questions/73562932/how-to-magnify-display-working-with-pixels-in-processing-java
  - creativecoding on p5.js for grid drawing: https://editor.p5js.org/creativecoding/sketches/duUe1NqJz
- Thanks to Molly Tenino & Colin Zyskowski @ UCSD's EnVision Maker Studio for lots of support & guidance
+ - Nick Gammon on Gammon Forum for buffering serial input: https://www.gammon.com.au/forum/bbshowpost.php?bbsubject_id=11425&page=1 
+ Thanks also to Molly Tenino & Colin Zyskowski @ UCSD's EnVision Maker Studio for lots of support & guidance
  */
 
 import processing.serial.*;
@@ -32,7 +33,7 @@ void setup()
   background(255);
   //pixelDensity(2);
   String portName = Serial.list()[1]; //change the 0 to a 1 or 2 etc. to match your port
-  myPort = new Serial(this, portName, 19200);
+  myPort = new Serial(this, portName, 112500);
 }
 
 void draw() {
@@ -60,11 +61,15 @@ void draw() {
     char red = (char)0;
     //print(red);
     
-    for (int i = 0; i < img.width; i++) {
-      for (int j = 0; j < img.height; j++) {
-        if (img.pixels[i+j*img.width] == color(100)) {
+    for (int i = img.width-1; i >= 0; i--) {
+      for (int j = img.height-1; j >= 0; j--) {
+        //if (img.pixels[i+j*img.width] == color(100)) {
+          if (img.pixels[i*img.height +j] == color(100)) {
           red = (char) 100;//(( img.pixels[i + j*img.width] >> 16 & 0xFF) >> 1);
           //print("x");
+        }
+        else if (img.pixels[i*img.height +j] == color(150)){
+          red = (char) 150;
         }
         else {
           red = (char) 0;
@@ -104,7 +109,15 @@ void draw() {
       for (int j = 0; j < img.height; j++) {
         if (mousePressed) {
           if (mouseX >= i*scaleFactor && mouseX < i*scaleFactor+scaleFactor && mouseY >= j*scaleFactor && mouseY < j*scaleFactor+scaleFactor) {
-            img.pixels[i + j*img.width] = color(100);
+            if(img.pixels[i + j*img.width] == color(255)){
+              img.pixels[i + j*img.width] = color(100);
+            }
+            else if(img.pixels[i + j*img.width] == color(100)){
+              img.pixels[i + j*img.width] = color(150);
+            }
+            else{
+              img.pixels[i + j*img.width] = color(255);
+            }
             print(i,j);
           }       
         }
