@@ -20,6 +20,8 @@ int ledPin = 13;  // Set the pin to digital I/O 13
 
 int col;  // recieving color data now
 
+int red, green, blue;
+
 int pixels[27 * 24];  //change to vars for readability; error
 
 // #define SERIAL_SIZE_RX 512
@@ -81,28 +83,36 @@ void loop() {
 
 void updateGrid(const char* data) {
   Serial.println("UPDATING GRID!");
-  for (int i = 0; i < ledWidth; i++) {
-    for (int j = 0; j < ledHeight; j++) {
-      col = data[i + j*ledWidth];
+  for (int i = 0; i < ledWidth*3; i+=3) {
+    for (int j = 0; j < ledHeight; j++) { // only 3 times more data not 9 ?
+      
+      // check the *3 weirdness... idk man i'm no computer
+      red = data[i + j*ledWidth*3];
+      green = data[(i + j*ledWidth*3)+1];
+      blue = data[(i + j*ledWidth*3)+2];
+      
       // pixels[i + j * ledWidth] = col;  // is this array even necessary? could just read data directly into 2D
-      if (col == char(150)){
-        strip.setPixelColor(i, j, col, 0, 0);
+      
+      // col = data[i + j*ledWidth];
+      // 1st test sending color data
+      // if (col == char(150)){
+      //   strip.setPixelColor(i, j, col, 0, 0);
 
-      }
-      else if (col == char(100)){
-        strip.setPixelColor(i, j, 0, 0, col);
+      // }
+      // else if (col == char(100)){
+      //   strip.setPixelColor(i, j, 0, 0, col);
 
-      }
-      else{
-        strip.setPixelColor(i,j,0,0,0);
-      }
+      // }
+      // else{
+      //   strip.setPixelColor(i,j,0,0,0);
+      // }
     }
   }
   Serial.println (data);
 }
 
 void gridBuffer(const byte inByte) {
-  static char input_line[PIXEL_LENGTH];
+  static char input_line[PIXEL_LENGTH*3];
   static unsigned int input_pos = 0;
 
   switch (inByte) {
@@ -113,7 +123,7 @@ void gridBuffer(const byte inByte) {
       break;
 
     default:
-      if (input_pos < (PIXEL_LENGTH - 1)) {
+      if (input_pos < (PIXEL_LENGTH*3 - 1)) {
         input_line[input_pos++] = (char) inByte; // cast to char since Processing sends char
       }
       break;
