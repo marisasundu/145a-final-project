@@ -1,25 +1,34 @@
 /*
 by Risa Sundu & David Shin
-References:
+ References:
  - sparkfun tutorial for serial communication between Processing and Arduino: https://learn.sparkfun.com/tutorials/connecting-arduino-to-processing/all#from-processing
  - cotterjk on stack overflow for pixel magnification: https://stackoverflow.com/questions/73562932/how-to-magnify-display-working-with-pixels-in-processing-java
  - creativecoding on p5.js for grid drawing: https://editor.p5js.org/creativecoding/sketches/duUe1NqJz
- - Nick Gammon on Gammon Forum for buffering serial input: https://www.gammon.com.au/forum/bbshowpost.php?bbsubject_id=11425&page=1 
+ - Nick Gammon on Gammon Forum for buffering serial input: https://www.gammon.com.au/forum/bbshowpost.php?bbsubject_id=11425&page=1
  Thanks also to Molly Tenino & Colin Zyskowski @ UCSD's EnVision Maker Studio for lots of support & guidance
  */
 
 import processing.serial.*;
+import controlP5.*;
 
 Serial myPort;  // Create object from Serial class
+ControlP5 cp5;
 
-PImage img = createImage(27, 24, RGB);
+PImage img = createImage(27, 24, RGB); // LED is 27 pixels wide x 24 pixels tall
+
+Slider redValue;
+Slider greenValue;
+Slider blueValue;
 
 int scaleFactor = 10;
-
 
 void setup()
 {
   frameRate(10);
+  cp5 = new ControlP5(this);
+  redValue = cp5.addSlider("Red Value").setSize(80, 10).setRange(0, 255).setPosition(10, 250).setColorLabel(0).setColorBackground(255);
+  greenValue = cp5.addSlider("Green Value").setSize(80, 10).setRange(0, 255).setPosition(10, 265).setColorLabel(0).setColorBackground(255);
+  blueValue = cp5.addSlider("Blue Value").setSize(80, 10).setRange(0, 255).setPosition(10, 280).setColorLabel(0).setColorBackground(255);
 
   //setup canvas: white = off
   img.loadPixels();
@@ -29,7 +38,7 @@ void setup()
     }
   }
   noSmooth(); //for crisp resizing
-  size(270, 240); //make our canvas 10x size of LEDs in pixels
+  size(270, 350); //make our canvas 10x [scaleFactor] size of LEDs in pixels
   background(255);
   //pixelDensity(2);
   String portName = Serial.list()[1]; //change the 0 to a 1 or 2 etc. to match your port
@@ -39,12 +48,12 @@ void setup()
 void draw() {
   updatePixels();
   //draw 27x24 grid for LED reference
-  for (int i = 0; i < width; i+=scaleFactor) {
+  for (int i = 0; i <= img.width*scaleFactor; i+=scaleFactor) {
     stroke(.25);
-    line(i, 0, i, height);
+    line(i, 0, i, img.height*scaleFactor);
   }
-  for (int j = 0; j < height; j+=scaleFactor) {
-    line(0, j, width, j);
+  for (int j = 0; j <= img.height*scaleFactor; j+=scaleFactor) {
+    line(0, j, img.width*scaleFactor, j);
   }
 
   //serial communication of color & position data w/ arduino
@@ -60,25 +69,22 @@ void draw() {
     println("sent!");
     char red = (char)0;
     //print(red);
-    
+
     for (int i = img.width-1; i >= 0; i--) {
       for (int j = img.height-1; j >= 0; j--) {
         //if (img.pixels[i+j*img.width] == color(100)) {
-          if (img.pixels[i*img.height +j] == color(100)) {
+        if (img.pixels[i*img.height +j] == color(100)) {
           red = (char) 100;//(( img.pixels[i + j*img.width] >> 16 & 0xFF) >> 1);
           //print("x");
-        }
-        else if (img.pixels[i*img.height +j] == color(150)){
+        } else if (img.pixels[i*img.height +j] == color(150)) {
           red = (char) 150;
-        }
-        else {
+        } else {
           red = (char) 0;
           //print("o");
         }
         //char red = (char) 100;//(( img.pixels[i + j*img.width] >> 16 & 0xFF) >> 1);
         myPort.write(red);
         //print(red);
-
       }
     }
     char startChar = 0b11111111;
@@ -98,31 +104,40 @@ void draw() {
     //  println("0");//send a 0
     //}
   }
-  }
+}
 
-  void updatePixels() {
-    img.loadPixels();
+void updatePixels() {
+  img.loadPixels();
 
-    noStroke();
-    // fill pixels w/ color
-    for (int i = 0; i < img.width; i++) {
-      for (int j = 0; j < img.height; j++) {
-        if (mousePressed) {
-          if (mouseX >= i*scaleFactor && mouseX < i*scaleFactor+scaleFactor && mouseY >= j*scaleFactor && mouseY < j*scaleFactor+scaleFactor) {
-            if(img.pixels[i + j*img.width] == color(255)){
-              img.pixels[i + j*img.width] = color(100);
-            }
-            else if(img.pixels[i + j*img.width] == color(100)){
-              img.pixels[i + j*img.width] = color(150);
-            }
-            else{
-              img.pixels[i + j*img.width] = color(255);
-            }
-            print(i,j);
-          }       
+  noStroke();
+  // fill pixels w/ color
+  for (int i = 0; i < img.width; i++) {
+    for (int j = 0; j < img.height; j++) {
+      if (mousePressed) {
+        if (mouseX >= i*scaleFactor && mouseX < i*scaleFactor+scaleFactor && mouseY >= j*scaleFactor && mouseY < j*scaleFactor+scaleFactor) {
+
+          // testing multiple color values
+          int red = int(redValue.getValue());
+          int green = int(greenValue.getValue());
+          int blue = int(blueValue.getValue());
+          img.pixels[i + j*img.width] = color(red, green, blue);
+          print(img.pixels[i + j*img.width]);
+
+          // testing single color value
+          //if(img.pixels[i + j*img.width] == color(255)){
+          //  img.pixels[i + j*img.width] = color(100);
+          //}
+          //else if(img.pixels[i + j*img.width] == color(100)){
+          //  img.pixels[i + j*img.width] = color(150);
+          //}
+          //else{
+          //  img.pixels[i + j*img.width] = color(255);
+          //}
+          print(i, j);
         }
       }
     }
-    img.updatePixels();
-    image(img, 0, 0, width, height);
   }
+  img.updatePixels();
+  image(img, 0, 0, img.width*scaleFactor, img.height*scaleFactor);
+}
