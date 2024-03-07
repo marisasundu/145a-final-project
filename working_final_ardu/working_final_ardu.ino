@@ -24,13 +24,12 @@ int red, green, blue;
 
 int pixels[27 * 24];  //change to vars for readability; error
 
-#define SERIAL_SIZE_RX 4000
+// #define SERIAL_SIZE_RX 4000
 
 void setup() {
   pinMode(ledPin, OUTPUT);  // Set pin as OUTPUT
-  Serial.begin(921600);       // Start Serial communication at 9600 bps
-  Serial.setRxBufferSize(SERIAL_SIZE_RX);
-                            //  strip.setPixelColor(10, 7, 0,255,200);
+  Serial.begin(112500);     // Start Serial communication at 9600 bps
+  // Serial.setRxBufferSize(SERIAL_SIZE_RX);
 
   strip.begin();
   strip.show();
@@ -40,89 +39,40 @@ unsigned int lastFrame = 0;
 
 void loop() {
   while (Serial.available()) {  // If data is available to read,
-    //adins test
-    // int r = int(Serial.read());
-    // int g = int(Serial.read());
-    // int b = int(Serial.read());
-    // Serial.write(r);
-    // strip.setPixelColor(10,10,r,g,b);
 
     gridBuffer(Serial.read());
-
-    //MOLLY:
-    // char start = Serial.read();
-    // if (start == 0b11111111) {
-    //   Serial.println("STARTEDDDD");
-      
-    //   Serial.println("");
-    //   Serial.println("IMGDATA:");
-    //   for (int i = 0; i < ledWidth; i++) {
-    //     for (int j = 0; j < ledHeight; j++) {
-    //       // char alpha = Serial.read();
-    //       while (!Serial.available()){
-    //         //do nothing until we recieve the entire screen buffer
-    //       }
-    //       char red = Serial.read();
-    //       Serial.print(red);
-    //       // char green = Serial.read();
-    //       // char blue = Serial.read();
-    //       // pixels[i + j*ledWidth] = col; // is this array even necessary? could just read data directly into 2D
-    //       strip.setPixelColor(i,j,red,0,0);
-    //     }
-    //   }
-    // }
-
-    // Serial.print("BAD:");
-    // Serial.println(start);
- 
-    // basicButton(); // for button test!
-    // content += Serial.read();
   }
-  // Serial.println(content);
 
   if ((millis() - lastFrame) >= frameTime) {
     lastFrame = millis();
     strip.show();
   }
-
-  //  delay(10); // Wait 10 milliseconds for next reading
 }
 
+// passed 1 "frame" worth of data, update 
 void updateGrid(const char* data) {
-  //Serial.println(sizeof(data));
   Serial.println("UPDATING GRID!");
   for (int i = 0; i < ledHeight; i++) {
-    for (int j = 0; j < ledWidth; j++) { // only 3 times more data not 9 ?
-      
-      // check the *3 weirdness... idk man i'm no computer
-      red = int(data[(i*ledWidth + j)*3]);
-      green = int(data[(i*ledWidth + j)*3+1]);
-      blue = int(data[(i*ledWidth + j)*3+2]);
+    for (int j = 0; j < ledWidth; j++) {
 
-      strip.setPixelColor(j,i,red,green,blue);
-      
-      // pixels[i + j * ledWidth] = col;  // is this array even necessary? could just read data directly into 2D
-      
       // 1st test sending color data
-      // col = data[i + j*ledWidth];
-      // if (col == char(150)){
-      //   strip.setPixelColor(i, j, col, 0, 0);
+      col = data[i + j * ledWidth];
+      if (col == char(150)) {
+        strip.setPixelColor(i, j, col, 0, 0);
 
-      // }
-      // else if (col == char(100)){
-      //   strip.setPixelColor(i, j, 0, 0, col);
+      } else if (col == char(100)) {
+        strip.setPixelColor(i, j, 0, 0, col);
 
-      // }
-      // else{
-      //   strip.setPixelColor(i,j,0,0,0);
-      // }
+      } else {
+        strip.setPixelColor(i, j, 0, 0, 0);
+      }
     }
   }
-  //Serial.println(int(data));
 }
 
+// fill up 1 "frame" worth of data before changing pixel colors
 void gridBuffer(const byte inByte) {
-  static char input_line[PIXEL_LENGTH*3];
+  static char input_line[PIXEL_LENGTH];
   static unsigned int input_pos = 0;
 
   switch (inByte) {
@@ -133,49 +83,9 @@ void gridBuffer(const byte inByte) {
       break;
 
     default:
-      if (input_pos < (PIXEL_LENGTH*3 - 1)) {
-        input_line[input_pos++] = (char) inByte; // cast to char since Processing sends char
+      if (input_pos < (PIXEL_LENGTH - 1)) {
+        input_line[input_pos++] = (char)inByte;  // cast to char since Processing sends char
       }
       break;
   }
 }
-
-void basicButton() {
-  val = Serial.read();           // read it and store it in val
-  if (val == '1') {              // If 1 was received
-    digitalWrite(ledPin, HIGH);  // turn the LED on
-    strip.setPixelColor(10, 7, 0, 255, 200);
-    Serial.println("on");
-  }
-  if (val == 255) {
-    digitalWrite(ledPin, HIGH);  // turn the LED on
-    strip.setPixelColor(10, 7, 255, 0, 0);
-  }
-  if (val == '0') {
-    digitalWrite(ledPin, LOW);  // otherwise turn it off
-    strip.setPixelColor(10, 7, 0, 0, 0);
-
-    Serial.println('off');
-  }
-}
-
-
-
-/*
-
-char* data;
-color_t* data;
-
-for (int i = 0; i< height; i++) {
-  for (int j = 0; j < width; j++) {
-    color_t color = data[i+j * width];
-
-    pixel.setColor(j, i, color.r, color.g, color.b)
-
-    send_color(color){
-      Serial.write()
-    }
-  }
-}
-
-*/
