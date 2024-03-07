@@ -24,12 +24,12 @@ int red, green, blue;
 
 int pixels[27 * 24];  //change to vars for readability; error
 
-// #define SERIAL_SIZE_RX 512
+#define SERIAL_SIZE_RX 4000
 
 void setup() {
   pinMode(ledPin, OUTPUT);  // Set pin as OUTPUT
-  Serial.begin(112500);       // Start Serial communication at 9600 bps
-  // Serial.setRxBufferSize(SERIAL_SIZE_RX);
+  Serial.begin(921600);       // Start Serial communication at 9600 bps
+  Serial.setRxBufferSize(SERIAL_SIZE_RX);
                             //  strip.setPixelColor(10, 7, 0,255,200);
 
   strip.begin();
@@ -40,6 +40,13 @@ unsigned int lastFrame = 0;
 
 void loop() {
   while (Serial.available()) {  // If data is available to read,
+    //adins test
+    // int r = int(Serial.read());
+    // int g = int(Serial.read());
+    // int b = int(Serial.read());
+    // Serial.write(r);
+    // strip.setPixelColor(10,10,r,g,b);
+
     gridBuffer(Serial.read());
 
     //MOLLY:
@@ -82,19 +89,22 @@ void loop() {
 }
 
 void updateGrid(const char* data) {
+  //Serial.println(sizeof(data));
   Serial.println("UPDATING GRID!");
-  for (int i = 0; i < ledWidth*3; i+=3) {
-    for (int j = 0; j < ledHeight; j++) { // only 3 times more data not 9 ?
+  for (int i = 0; i < ledHeight; i++) {
+    for (int j = 0; j < ledWidth; j++) { // only 3 times more data not 9 ?
       
       // check the *3 weirdness... idk man i'm no computer
-      red = data[i + j*ledWidth*3];
-      green = data[(i + j*ledWidth*3)+1];
-      blue = data[(i + j*ledWidth*3)+2];
+      red = int(data[(i*ledWidth + j)*3]);
+      green = int(data[(i*ledWidth + j)*3+1]);
+      blue = int(data[(i*ledWidth + j)*3+2]);
+
+      strip.setPixelColor(j,i,red,green,blue);
       
       // pixels[i + j * ledWidth] = col;  // is this array even necessary? could just read data directly into 2D
       
-      // col = data[i + j*ledWidth];
       // 1st test sending color data
+      // col = data[i + j*ledWidth];
       // if (col == char(150)){
       //   strip.setPixelColor(i, j, col, 0, 0);
 
@@ -108,7 +118,7 @@ void updateGrid(const char* data) {
       // }
     }
   }
-  Serial.println (data);
+  //Serial.println(int(data));
 }
 
 void gridBuffer(const byte inByte) {
@@ -148,3 +158,24 @@ void basicButton() {
     Serial.println('off');
   }
 }
+
+
+
+/*
+
+char* data;
+color_t* data;
+
+for (int i = 0; i< height; i++) {
+  for (int j = 0; j < width; j++) {
+    color_t color = data[i+j * width];
+
+    pixel.setColor(j, i, color.r, color.g, color.b)
+
+    send_color(color){
+      Serial.write()
+    }
+  }
+}
+
+*/
