@@ -1,3 +1,13 @@
+/*
+by Risa Sundu & David Shin
+ References:
+ - sparkfun tutorial for serial communication between Processing and Arduino: https://learn.sparkfun.com/tutorials/connecting-arduino-to-processing/all#from-processing
+ - cotterjk on stack overflow for pixel magnification: https://stackoverflow.com/questions/73562932/how-to-magnify-display-working-with-pixels-in-processing-java
+ - creativecoding on p5.js for grid drawing: https://editor.p5js.org/creativecoding/sketches/duUe1NqJz
+ - Nick Gammon on Gammon Forum for buffering serial input: https://www.gammon.com.au/forum/bbshowpost.php?bbsubject_id=11425&page=1
+ Thanks also to Molly Tenino & Colin Zyskowski @ UCSD's EnVision Maker Studio for lots of support & guidance
+ */
+
 #include "SPI.h";
 #include "Adafruit_WS2801.h";
 
@@ -28,7 +38,7 @@ int pixels[27 * 24];  //change to vars for readability; error
 
 void setup() {
   pinMode(ledPin, OUTPUT);  // Set pin as OUTPUT
-  Serial.begin(112500);     // Start Serial communication at 9600 bps
+  Serial.begin(922190);     // Start Serial communication at 9600 bps
   // Serial.setRxBufferSize(SERIAL_SIZE_RX);
 
   strip.begin();
@@ -57,11 +67,8 @@ void updateGrid(const char* data) {
 
       // 1st test sending color data
       col = data[i + j * ledWidth];
-      if (col == char(150)) {
-        strip.setPixelColor(i, j, col, 0, 0);
-
-      } else if (col == char(100)) {
-        strip.setPixelColor(i, j, 0, 0, col);
+    if (col == char(100)) {
+        strip.setPixelColor(i, j, int(random(255)), int(random(255)), int(random(255)));
 
       } else {
         strip.setPixelColor(i, j, 0, 0, 0);

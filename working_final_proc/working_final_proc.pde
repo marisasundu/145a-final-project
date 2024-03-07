@@ -5,7 +5,7 @@ by Risa Sundu & David Shin
  - cotterjk on stack overflow for pixel magnification: https://stackoverflow.com/questions/73562932/how-to-magnify-display-working-with-pixels-in-processing-java
  - creativecoding on p5.js for grid drawing: https://editor.p5js.org/creativecoding/sketches/duUe1NqJz
  - Nick Gammon on Gammon Forum for buffering serial input: https://www.gammon.com.au/forum/bbshowpost.php?bbsubject_id=11425&page=1
- Thanks also to Molly Tenino & Colin Zyskowski @ UCSD's EnVision Maker Studio for lots of support & guidance
+ Thanks also to Molly, Leo, Adin, & Colin @ UCSD's EnVision Maker Studio for lots of support & guidance
  */
 
 import processing.serial.*;
@@ -38,7 +38,7 @@ void setup()
 
   // initialize serial communication
   String portName = Serial.list()[1]; //change the 0 to a 1 or 2 etc. to match your port
-  myPort = new Serial(this, portName, 112500);
+  myPort = new Serial(this, portName, 922190);
 }
 
 void draw() {
@@ -47,13 +47,13 @@ void draw() {
   }
   opencv.loadImage(video);
   // Display the video feed on the right side of the window
-  //image(video, img.width*scaleFactor, 0);
+  image(video, img.width*scaleFactor, 0);
   
   // mirror image so moving left causes lights to move left
-  pushMatrix();
-  scale(-1,1);
-  image(video, -video.width-img.width*scaleFactor, 0);
-  popMatrix();
+  //pushMatrix();
+  //scale(-1,1);
+  //image(video, -video.width-img.width*scaleFactor, 0);
+  //popMatrix();
 
   // Clear the LED matrix at the start of each frame to remove previous detections
   clearMatrix();
