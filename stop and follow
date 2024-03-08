@@ -1,0 +1,111 @@
+import gab.opencv.*;
+import processing.video.*;
+import java.awt.Rectangle;
+import processing.serial.*;
+import org.opencv.core.Core;
+
+Capture video;
+OpenCV opencv;
+Serial myPort;  // Create object from Serial class
+PImage img = createImage(27, 24, RGB);
+int scaleFactor = 10; // Factor to scale up LED matrix for display
+boolean isSpacebarPressed = false; // Track the state of the spacebar
+
+void setup() {
+  size(640 + 270, 480); // Adjusted to display video and LED matrix side by side
+  video = new Capture(this, 640, 480);
+  opencv = new OpenCV(this, 640, 480);
+  opencv.loadCascade(OpenCV.CASCADE_FRONTALFACE);  
+  video.start();
+  
+  frameRate(10);
+  clearLEDMatrix(); // Initialize LED matrix with all pixels turned off
+  noSmooth(); // For crisp resizing of pixels
+  
+  println(Serial.list()); // Print available serial ports
+  String portName = Serial.list()[0]; // Select the correct port for your setup
+  myPort = new Serial(this, portName, 115200); // Adjust baud rate to match Arduino
+}
+
+void draw() {
+  if (video.available()) {
+    video.read();
+  }
+  opencv.loadImage(video);
+  image(video, 0, 0); // Display the video feed on the left side of the window
+  
+  if (isSpacebarPressed) {
+    Rectangle[] faces = opencv.detect(); // Detect faces
+    clearLEDMatrix();
+    if (faces.length > 0) {
+      for (Rectangle face : faces) {
+        drawFaceArea(face.x, face.y, face.width, face.height);
+      }
+    }
+  } else {
+    activateRandomButtons();
+  }
+  
+  image(img, 640, 0, img.width * scaleFactor, img.height * scaleFactor); // Draw the scaled-up LED matrix on the right side of the window
+  drawGrid();
+}
+
+void keyPressed() {
+  if (key == ' ') { // Check if the pressed key is the spacebar
+    isSpacebarPressed = true;
+  }
+}
+
+void keyReleased() {
+  if (key == ' ') { // Check if the released key is the spacebar
+    isSpacebarPressed = false;
+  }
+}
+
+void clearLEDMatrix() {
+  img.loadPixels();
+  for (int i = 0; i < img.pixels.length; i++) {
+    img.pixels[i] = color(255); // Set all pixels to white (off)
+  }
+  img.updatePixels();
+}
+
+void drawFaceArea(int x, int y, int w, int h) {
+  int ledX = int(map(x, 0, video.width, 0, img.width));
+  int ledY = int(map(y, 0, video.height, 0, img.height));
+  int ledW = int(map(w, 0, video.width, 0, img.width));
+  int ledH = int(map(h, 0, video.height, 0, img.height));
+  
+  img.loadPixels();
+  for (int i = ledX; i < ledX + ledW; i++) {
+    for (int j = ledY; j < ledY + ledH; j++) {
+      if (i >= 0 && i < img.width && j >= 0 && j < img.height) {
+        img.pixels[i + j * img.width] = color(0, 255, 0); // Set color to indicate face detection
+      }
+    }
+  }
+  img.updatePixels();
+}
+
+void activateRandomButtons() {
+  clearLEDMatrix(); // Clear the matrix to start fresh
+  int numPixelsToActivate = (img.width * img.height) / 10; // Activate 10% of the grid
+  for (int i = 0; i < numPixelsToActivate; i++) {
+    int randomX = int(random(img.width));
+    int randomY = int(random(img.height));
+    img.pixels[randomX + randomY * img.width] = color(255, 0, 0); // Randomly activated pixels colored red
+  }
+  img.updatePixels();
+}
+
+void drawGrid() {
+  stroke(0);
+  // Draw vertical grid lines
+  for (int i = 640; i <= 640 + img.width * scaleFactor; i += scaleFactor) {
+    line(i, 0, i, img.height * scaleFactor);
+  }
+  // Draw horizontal grid lines
+  for (int j = 0; j <= img.height * scaleFactor; j += scaleFactor) {
+    line(640, j, 640 + img.width * scaleFactor, j);
+  }
+}
