@@ -43,6 +43,11 @@ void setup() {
 void draw() {
   if (video.available()) {
     video.read();
+    pushMatrix(); // Save the current transformation matrix
+    translate(video.width, 0); // Move the origin to the right edge of the video
+    scale(-1.0, 1.0); // Flip the video feed horizontally
+    image(video, 0, 0); // Display the mirrored video feed
+    popMatrix(); // Restore the transformation matrix
   }
   opencv.loadImage(video);
 
