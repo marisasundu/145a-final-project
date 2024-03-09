@@ -43,6 +43,7 @@ void setup() {
 void draw() {
   if (video.available()) {
     video.read();
+    // Flip the video feed horizontally
     pushMatrix(); // Save the current transformation matrix
     translate(video.width, 0); // Move the origin to the right edge of the video
     scale(-1.0, 1.0); // Flip the video feed horizontally
@@ -50,13 +51,12 @@ void draw() {
     popMatrix(); // Restore the transformation matrix
   }
   opencv.loadImage(video);
+  
+  // Processing the video and updating the LED matrix follow here as before
+  // Note: When drawing detected faces or other features back onto the video,
+  // you'll need to adjust their positions according to the mirrored coordinates.
 
-  // Display the video feed on the right side of the window directly (not mirrored)
-  image(video, img.width * scaleFactor, 0);
-
-  clearMatrix(); // Clear LED matrix
-
- if (isSpacebarPressed) {
+  if (isSpacebarPressed) {
     Rectangle[] faces = opencv.detect(); // Detect faces
     clearLEDMatrix();
     if (faces.length > 0) {
@@ -66,10 +66,10 @@ void draw() {
         drawFaceArea(mirroredX, face.y, face.width, face.height);
       }
     }
- } else {
+  } else {
     activateRandomButtons();
- }
-
+  }
+  
   image(img, 640, 0, img.width * scaleFactor, img.height * scaleFactor); // Draw the scaled-up LED matrix on the right side of the window
   drawGrid();
 }
