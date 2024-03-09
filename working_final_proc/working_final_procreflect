@@ -116,7 +116,9 @@ void drawGrid() {
 
 void clearMatrix() {
   img.loadPixels();
-  Arrays.fill(img.pixels, color(255)); // Fill with white color to 'clear'
+  for (int i = 0; i < img.pixels.length; i++) {
+    img.pixels[i] = color(255); // Set all pixels to white
+  }
   img.updatePixels();
 }
 
