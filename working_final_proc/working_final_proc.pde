@@ -21,6 +21,7 @@ OpenCV opencv;
 PImage img = createImage(27, 24, RGB); // LED is 27 pixels wide x 24 pixels tall
 
 int scaleFactor = 10;
+boolean isSpacebarPressed = false; // Track the state of the spacebar
 
 void setup()
 {
@@ -58,7 +59,12 @@ void draw() {
   // Clear the LED matrix at the start of each frame to remove previous detections
   clearMatrix();
 
-  detectFace();
+if (isSpacebarPressed) {
+    detectFace();
+}
+else {
+  activateRandomButtons();
+}
 
   updatePixels();
 
@@ -66,7 +72,28 @@ void draw() {
 
   writeSerial(); //serial communication of color & position data w/ arduino
 }
+void keyPressed() {
+  if (key == ' ') { // Check if the pressed key is the spacebar
+    isSpacebarPressed = true;
+  }
+}
 
+void keyReleased() {
+  if (key == ' ') { // Check if the released key is the spacebar
+    isSpacebarPressed = false;
+  }
+}
+
+void activateRandomButtons() {
+  clearMatrix(); // Clear the matrix to start fresh
+  int numPixelsToActivate = (img.width * img.height) / 10; // Activate 10% of the grid
+  for (int i = 0; i < numPixelsToActivate; i++) {
+    int randomX = int(random(img.width));
+    int randomY = int(random(img.height));
+    img.pixels[randomX + randomY * img.width] = color(100); // Randomly activated pixels colored red
+  }
+  img.updatePixels();
+}
 void writeSerial() {
   while (myPort.available() > 0) {
     print((char) myPort.read());
@@ -99,27 +126,6 @@ void writeSerial() {
 
 void updatePixels() {
   img.loadPixels();
-
-  noStroke();
-  // fill pixels w/ color
-  for (int i = 0; i < img.width; i++) {
-    for (int j = 0; j < img.height; j++) {
-      if (mousePressed) {
-        if (mouseX >= i*scaleFactor && mouseX < i*scaleFactor+scaleFactor && mouseY >= j*scaleFactor && mouseY < j*scaleFactor+scaleFactor) {
-
-          // testing single color value
-          if (img.pixels[i + j*img.width] == color(255)) {
-            img.pixels[i + j*img.width] = color(100);
-          } else if (img.pixels[i + j*img.width] == color(100)) {
-            img.pixels[i + j*img.width] = color(150);
-          } else {
-            img.pixels[i + j*img.width] = color(255);
-          }
-          print(i, j);
-        }
-      }
-    }
-  }
 
   img.updatePixels();
   image(img, 0, 0, img.width*scaleFactor, img.height*scaleFactor);
