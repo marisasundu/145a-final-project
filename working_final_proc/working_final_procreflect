@@ -56,11 +56,23 @@ void draw() {
 
   clearMatrix(); // Clear LED matrix
 
-  if (isSpacebarPressed) {
-    detectFace();
-  } else {
+ if (isSpacebarPressed) {
+    Rectangle[] faces = opencv.detect(); // Detect faces
+    clearLEDMatrix();
+    if (faces.length > 0) {
+      for (Rectangle face : faces) {
+        // Adjust face.x for the mirrored video
+        int mirroredX = video.width - (face.x + face.width);
+        drawFaceArea(mirroredX, face.y, face.width, face.height);
+      }
+    }
+ } else {
     activateRandomButtons();
-  }
+ }
+
+  image(img, 640, 0, img.width * scaleFactor, img.height * scaleFactor); // Draw the scaled-up LED matrix on the right side of the window
+  drawGrid();
+}
 
   updatePixels();
   drawGrid(); // Draw the grid for LED matrix reference
