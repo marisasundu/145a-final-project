@@ -45,36 +45,26 @@ void setup()
 void draw() {
   if (video.available()) {
     video.read();
-    // Flip the video feed horizontally
-    pushMatrix(); // Save the current transformation matrix
-    translate(video.width, 0); // Move the origin to the right edge of the video
-    scale(-1.0, 1.0); // Flip the video feed horizontally
-    image(video, 0, 0); // Display the mirrored video feed
-    popMatrix(); // Restore the transformation matrix
-  }
-  opencv.loadImage(video);
-  
-  // Processing the video and updating the LED matrix follow here as before
-  // Note: When drawing detected faces or other features back onto the video,
-  // you'll need to adjust their positions according to the mirrored coordinates.
+    opencv.loadImage(video);
 
-  if (isSpacebarPressed) {
-    Rectangle[] faces = opencv.detect(); // Detect faces
-    clearLEDMatrix();
-    if (faces.length > 0) {
-      for (Rectangle face : faces) {
-        // Adjust face.x for the mirrored video
-        int mirroredX = video.width - (face.x + face.width);
-        drawFaceArea(mirroredX, face.y, face.width, face.height);
-      }
+    // Display the non-mirrored video feed directly
+    image(video, img.width*scaleFactor, 0);
+
+    // Clear the LED matrix at the start of each frame to remove previous detections
+    clearMatrix();
+
+    if (isSpacebarPressed) {
+        detectFace();
+    } else {
+      activateRandomButtons();
     }
-  } else {
-    activateRandomButtons();
+
+    updatePixels();
+    drawGrid(); // Draw 27x24 grid for LED reference
+    writeSerial(); // Serial communication of color & position data with Arduino
   }
-  
-  image(img, 640, 0, img.width * scaleFactor, img.height * scaleFactor); // Draw the scaled-up LED matrix on the right side of the window
-  drawGrid();
 }
+
 void keyPressed() {
   if (key == ' ') { // Check if the pressed key is the spacebar
     isSpacebarPressed = true;
