@@ -125,16 +125,18 @@ void clearMatrix() {
 void detectFace() {
   Rectangle[] faces = opencv.detect(); // Detect faces
   for (Rectangle face : faces) {
-    // Convert face coordinates from video to LED matrix scale
+    // Convert face coordinates from video to LED matrix scale without mirroring.
+    // Since the video is not mirrored, we map directly.
     int ledX = int(map(face.x, 0, video.width, 0, img.width));
     int ledY = int(map(face.y, 0, video.height, 0, img.height));
     int ledW = int(map(face.width, 0, video.width, 0, img.width));
     int ledH = int(map(face.height, 0, video.height, 0, img.height));
 
-    highlightFace(ledX, ledY, ledW, ledH); // Highlight detected face area
+    highlightFace(ledX, ledY, ledW, ledH); // Highlight detected face area on the LED matrix.
   }
 }
 
+// This function highlights the face area directly; any adjustment for "softening" the edges is kept.
 void highlightFace(int x, int y, int w, int h) {
   for (int i = x; i < x + w; i++) {
     for (int j = y; j < y + h; j++) {
@@ -143,7 +145,10 @@ void highlightFace(int x, int y, int w, int h) {
       }
     }
   }
+  // Optional: Soften the edges if needed here, but ensure it matches your non-mirrored logic.
+
   img.updatePixels();
+}
 
 // make face a little less rectangular
   img.pixels[x+y*img.width] = color(255);
