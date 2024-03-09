@@ -144,7 +144,7 @@ void highlightFace(int x, int y, int w, int h) {
     }
   }
   img.updatePixels();
-}
+
 // make face a little less rectangular
   img.pixels[x+y*img.width] = color(255);
   img.pixels[(x+w-1)+y*img.width] = color(255);
