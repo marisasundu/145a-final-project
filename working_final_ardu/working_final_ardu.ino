@@ -20,6 +20,10 @@ int ledWidth = 27;
 int ledHeight = 24;
 const unsigned int PIXEL_LENGTH = 27 * 24;
 
+int BLUE = 50;
+int RED = 110;
+int TEAL = 10;
+
 String content = "";
 
 Adafruit_WS2801 strip = Adafruit_WS2801((uint16_t)ledWidth, (uint16_t)ledHeight, dataPin, clockPin);
@@ -61,7 +65,7 @@ void loop() {
 
 // passed 1 "frame" worth of data, update 
 void updateGrid(const char* data) {
-  Serial.println("UPDATING GRID!");
+  // Serial.println("UPDATING GRID!");
   for (int i = 0; i < ledHeight; i++) {
     for (int j = 0; j < ledWidth; j++) {
 
@@ -71,10 +75,15 @@ void updateGrid(const char* data) {
         strip.setPixelColor(i, j, int(random(255)), int(random(255)), int(random(255)));
 
       } 
-      else if (col == char(50)) {
+      else if (col == char(BLUE)) {
         strip.setPixelColor(i,j,10,255,10);
       }
-      
+      else if (col == char(RED)){
+        strip.setPixelColor(i,j,255,10,10);
+      }
+      else if (col == char(TEAL)){
+        strip.setPixelColor(i,j,65, 216, 224);
+      }
       else {
         strip.setPixelColor(i, j, 0, 0, 0);
       }
@@ -91,7 +100,7 @@ void gridBuffer(const byte inByte) {
     // Serial.println("start char recieved!");
   switch (inByte) {
     case 0b11111111:  //end
-      Serial.println("end char recieved!");
+      // Serial.println("end char recieved!");
       input_line[input_pos] = 0;
       updateGrid(input_line);
       input_pos = 0;

@@ -7,8 +7,8 @@ by Risa Sundu & David Shin
  - Nick Gammon on Gammon Forum for buffering serial input: https://www.gammon.com.au/forum/bbshowpost.php?bbsubject_id=11425&page=1
  Thanks also to Molly, Leo, Adin, & Colin @ UCSD's EnVision Maker Studio for lots of support & guidance
  */
- 
- /*to add:
+
+/*to add:
  - slow down chaos mode
  - some type of abstract animation, or spiral, or raindrops??
  - ball/pixels bouncing off sides
@@ -28,8 +28,20 @@ PImage img = createImage(27, 24, RGB); // LED is 27 pixels wide x 24 pixels tall
 
 int scaleFactor = 10;
 boolean isSpacebarPressed = false; // Track the state of the spacebar
+boolean isUpArrowPressed = false;
 //boolean writtenSerial = false;
-int FACE = 50;
+int BLUE = 50;
+int RED = 110;
+int TEAL = 10;
+
+// vars for bounce animation
+float xpos, ypos, xpos2, ypos2;
+float speed = 8;
+
+int xdir = 1;
+int ydir = 1;
+int xdir2 = 1;
+int ydir2 = -1;
 
 void setup()
 {
@@ -44,6 +56,12 @@ void setup()
   noSmooth(); //for crisp resizing
 
   background(255);
+
+  // for bounce animation
+  xpos = (img.width*scaleFactor)/2;
+  ypos = (img.height*scaleFactor)/2;
+  xpos2 = (img.width*scaleFactor)/2 -5;
+  ypos2 = (img.height*scaleFactor)/2 -5;
 
   // initialize serial communication
   String portName = Serial.list()[1]; //change the 0 to a 1 or 2 etc. to match your port
@@ -67,27 +85,44 @@ void draw() {
   // Clear the LED matrix at the start of each frame to remove previous detections
   clearMatrix();
 
+
+
   if (isSpacebarPressed) {
     detectFace();
-  } else {
+  } else if (isUpArrowPressed) {
+    bounceAnimation();
+  }
+  // if up arrow {
+  //animation();
+  else {
     activateRandomButtons();
   }
-
   updatePixels();
 
   drawGrid();   //draw 27x24 grid for LED reference
 
   writeSerial(); //serial communication of color & position data w/ arduino
 }
+
 void keyPressed() {
   if (key == ' ') { // Check if the pressed key is the spacebar
     isSpacebarPressed = true;
+  }
+  if (key == CODED) {
+    if (keyCode == UP) {
+      isUpArrowPressed = true;
+    }
   }
 }
 
 void keyReleased() {
   if (key == ' ') { // Check if the released key is the spacebar
     isSpacebarPressed = false;
+  }
+  if (key == CODED) {
+    if (keyCode == UP) {
+      isUpArrowPressed = false;
+    }
   }
 }
 
@@ -107,7 +142,7 @@ void writeSerial() {
     print((char) myPort.read());
   }
 
-  char red = (char)0;
+  char data = (char)0;
   //print(red);
   //char startChar = char(10);
   //if (writtenSerial == false) {
@@ -116,18 +151,13 @@ void writeSerial() {
   //}
   for (int i = img.width-1; i >= 0; i--) {
     for (int j = img.height-1; j >= 0; j--) {
-
-      //initial testing of sending different color data
-      if (img.pixels[i*img.height +j] == color(100)) {
-        red = (char) 100;//(( img.pixels[i + j*img.width] >> 16 & 0xFF) >> 1);
-        //print("x");
-      } else if (img.pixels[i*img.height +j] == color(FACE)) {
-        red = (char) FACE                                           ;
-      } else {
-        red = (char) 0;
-        //print("o");
+      if (img.pixels[i*img.height+j] == color(255)){
+        data = (char) 0;
       }
-      myPort.write(red);
+      else {
+      data = (char)(img.pixels[i*img.height+j]);
+      }                                           
+      myPort.write(data);
     }
   }
   char endChar = 0b11111111; // send end of matrix
@@ -166,7 +196,6 @@ void clearMatrix() {
 
 void detectFace() {
   Rectangle[] faces = opencv.detect(); // Detect faces
-
   //trying to mirror camera
   //pushMatrix();
   //  scale(-1,1);
@@ -185,11 +214,11 @@ void detectFace() {
 }
 
 void highlightFace(int x, int y, int w, int h) {
-  
+
   for (int i = x; i < x + w; i++) {
     for (int j = y; j < y + h; j++) {
       if (i >= 0 && i < img.width && j >= 0 && j < img.height) {
-        img.pixels[i + j * img.width] = color(FACE); // Set color for simulated 'click'
+        img.pixels[i + j * img.width] = color(BLUE); // Set color for simulated 'click'
       }
     }
   }
@@ -200,4 +229,43 @@ void highlightFace(int x, int y, int w, int h) {
   img.pixels[(x+w-1)+(y+h-1)*img.width] = color(255);
 
   img.updatePixels();
+}
+
+void bounceAnimation() {
+  //background(150);
+  println("bouncing!");
+
+  // standard bounce (i.e. pong)
+  xpos = xpos + (speed* xdir);
+  ypos = ypos + (speed*ydir);
+  xpos2 = xpos2 + (speed* xdir2);
+  ypos2 = ypos2 + (speed*ydir2);
+  
+  // perlin noise movement
+  //xpos = 300 * noise(0.005*frameCount) +50;
+  //ypos = 300 * noise(0.005 * frameCount + 10000) + 50;
+
+  if (xpos > img.width*scaleFactor - 10 || xpos < 10) {
+    xdir *= -1;
+  }
+  if (ypos > img.height*scaleFactor - 10 || ypos < 10) {
+    ydir *= -1;
+  }
+  if (xpos2 > img.width*scaleFactor - 10 || xpos2 < 10) {
+    xdir2 *= -1;
+  }
+  if (ypos2 > img.height*scaleFactor - 10 || ypos2 < 10) {
+    ydir2 *= -1;
+  }
+
+  for (int i = 0; i < img.width; i++) {
+    for (int j = 0; j < img.height; j++) {
+      if (xpos >= i*scaleFactor && xpos < i*scaleFactor+scaleFactor && ypos >= j*scaleFactor && ypos < j*scaleFactor+scaleFactor) {
+        img.pixels[i + j*img.width] = color(RED);
+      }
+      if (xpos2 >= i*scaleFactor && xpos2 < i*scaleFactor+scaleFactor && ypos2 >= j*scaleFactor && ypos2 < j*scaleFactor+scaleFactor) {
+        img.pixels[i + j*img.width] = color(TEAL);
+      }
+    }
+  }
 }
