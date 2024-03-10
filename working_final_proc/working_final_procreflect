@@ -17,15 +17,13 @@ import org.opencv.core.Core;
 Serial myPort;  // Create object from Serial class
 Capture video;
 OpenCV opencv;
+PImage img = createImage(27, 24, RGB); // LED matrix dimensions
 
-PImage img = createImage(27, 24, RGB); // LED is 27 pixels wide x 24 pixels tall
+int scaleFactor = 10; // Scale factor for LED matrix display
+boolean isSpacebarPressed = false; // State of the spacebar
 
-int scaleFactor = 10;
-boolean isSpacebarPressed = false; // Track the state of the spacebar
-
-void setup()
-{
-  size(480 + 270, 480); // Adjusted to display video and LED matrix side by side
+void setup() {
+  size(480 + 270, 480); // Adjusted window size for video and LED matrix side by side
   video = new Capture(this, 480, 480);
   opencv = new OpenCV(this, 480, 480);
   opencv.loadCascade(OpenCV.CASCADE_FRONTALFACE);
@@ -33,13 +31,13 @@ void setup()
 
   frameRate(10);
   clearMatrix();
-  noSmooth(); //for crisp resizing
+  noSmooth(); // For crisp pixel resizing
 
   background(255);
 
-  // initialize serial communication
-  String portName = Serial.list()[1]; //change the 0 to a 1 or 2 etc. to match your port
-  myPort = new Serial(this, portName, 922190);
+  // Initialize serial communication
+  String portName = Serial.list()[1]; // Adjust to match your port
+  myPort = new Serial(this, portName, 115200); // Adjust baud rate as needed
 }
 
 void draw() {
@@ -75,116 +73,100 @@ void draw() {
   image(img, 640, 0, img.width * scaleFactor, img.height * scaleFactor); // Draw the scaled-up LED matrix on the right side of the window
   drawGrid();
 }
+
+  updatePixels();
+  drawGrid(); // Draw the grid for LED matrix reference
+  writeSerial(); // Communicate with Arduino
+}
+
 void keyPressed() {
-  if (key == ' ') { // Check if the pressed key is the spacebar
+  if (key == ' ') {
     isSpacebarPressed = true;
   }
 }
 
 void keyReleased() {
-  if (key == ' ') { // Check if the released key is the spacebar
+  if (key == ' ') {
     isSpacebarPressed = false;
   }
 }
 
 void activateRandomButtons() {
-  clearMatrix(); // Clear the matrix to start fresh
+  clearMatrix(); // Clear matrix to start fresh
   int numPixelsToActivate = (img.width * img.height) / 10; // Activate 10% of the grid
   for (int i = 0; i < numPixelsToActivate; i++) {
     int randomX = int(random(img.width));
     int randomY = int(random(img.height));
-    img.pixels[randomX + randomY * img.width] = color(100); // Randomly activated pixels colored red
+    img.pixels[randomX + randomY * img.width] = color(100); // Set pixels to a color
   }
   img.updatePixels();
 }
+
 void writeSerial() {
   while (myPort.available() > 0) {
-    print((char) myPort.read());
+    myPort.read(); // Clear the serial buffer
   }
 
-
-  char red = (char)0;
-  //print(red);
-
-  for (int i = img.width-1; i >= 0; i--) {
-    for (int j = img.height-1; j >= 0; j--) {
-
-      //initial testing of sending different color data
-      if (img.pixels[i*img.height +j] == color(100)) {
-        red = (char) 100;//(( img.pixels[i + j*img.width] >> 16 & 0xFF) >> 1);
-        //print("x");
-      } else if (img.pixels[i*img.height +j] == color(150)) {
-        red = (char) 150;
-      } else {
-        red = (char) 0;
-        //print("o");
-      }
-      myPort.write(red);
+  for (int i = img.width - 1; i >= 0; i--) {
+    for (int j = img.height - 1; j >= 0; j--) {
+      char colorValue = (img.pixels[i * img.height + j] == color(100)) ? (char) 100 : (char) 0;
+      myPort.write(colorValue);
     }
   }
-  char startChar = 0b11111111; // send end of matrix
-  myPort.write(startChar);
-  println("writing end bit");
+  myPort.write(0xFF); // End of matrix signal
 }
 
 void updatePixels() {
-  img.loadPixels();
-
   img.updatePixels();
-  image(img, 0, 0, img.width*scaleFactor, img.height*scaleFactor);
+  image(img, 0, 0, img.width * scaleFactor, img.height * scaleFactor); // Display LED matrix
 }
 
 void drawGrid() {
-  //draw 27x24 grid for LED reference
-  for (int i = 0; i <= img.width*scaleFactor; i+=scaleFactor) {
-    stroke(.25);
-    line(i, 0, i, img.height*scaleFactor);
+  for (int i = 0; i <= img.width * scaleFactor; i += scaleFactor) {
+    stroke(0.25);
+    line(i, 0, i, img.height * scaleFactor);
   }
-  for (int j = 0; j <= img.height*scaleFactor; j+=scaleFactor) {
-    line(0, j, img.width*scaleFactor, j);
+  for (int j = 0; j <= img.height * scaleFactor; j += scaleFactor) {
+    line(0, j, img.width * scaleFactor, j);
   }
 }
 
 void clearMatrix() {
-  //setup canvas: white = off
   img.loadPixels();
-  for (int i = 0; i < img.width; i++) {
-    for (int j = 0; j < img.height; j++) {
-      img.pixels[i + j*img.width] = color(255);
-    }
+  for (int i = 0; i < img.pixels.length; i++) {
+    img.pixels[i] = color(255); // Set all pixels to white
   }
+  img.updatePixels();
 }
 
 void detectFace() {
   Rectangle[] faces = opencv.detect(); // Detect faces
-  
-  //trying to mirror camera
-  //pushMatrix();
-  //  scale(-1,1);
-
   for (Rectangle face : faces) {
-    // Map face dimensions from video resolution to LED matrix resolution
+    // Convert face coordinates from video to LED matrix scale without mirroring.
+    // Since the video is not mirrored, we map directly.
     int ledX = int(map(face.x, 0, video.width, 0, img.width));
     int ledY = int(map(face.y, 0, video.height, 0, img.height));
     int ledW = int(map(face.width, 0, video.width, 0, img.width));
     int ledH = int(map(face.height, 0, video.height, 0, img.height));
 
-    // Highlight the area within the face detection
-    highlightFace(ledX, ledY, ledW, ledH);
-
+    highlightFace(ledX, ledY, ledW, ledH); // Highlight detected face area on the LED matrix.
   }
-      //popMatrix();
 }
 
+// This function highlights the face area directly; any adjustment for "softening" the edges is kept.
 void highlightFace(int x, int y, int w, int h) {
   for (int i = x; i < x + w; i++) {
     for (int j = y; j < y + h; j++) {
       if (i >= 0 && i < img.width && j >= 0 && j < img.height) {
-        img.pixels[i + j * img.width] = color(100); // Set color for simulated 'click'
+        img.pixels[i + j * img.width] = color(100); // Set color for face area
       }
     }
   }
-  // make face a little less rectangular
+  // Optional: Soften the edges if needed here, but ensure it matches your non-mirrored logic.
+
+  img.updatePixels();
+
+// make face a little less rectangular
   img.pixels[x+y*img.width] = color(255);
   img.pixels[(x+w-1)+y*img.width] = color(255);
   img.pixels[x+(y+h-1)*img.width] = color(255);
