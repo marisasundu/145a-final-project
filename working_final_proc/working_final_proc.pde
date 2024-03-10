@@ -7,6 +7,12 @@ by Risa Sundu & David Shin
  - Nick Gammon on Gammon Forum for buffering serial input: https://www.gammon.com.au/forum/bbshowpost.php?bbsubject_id=11425&page=1
  Thanks also to Molly, Leo, Adin, & Colin @ UCSD's EnVision Maker Studio for lots of support & guidance
  */
+ 
+ /*to add:
+ - slow down chaos mode
+ - some type of abstract animation, or spiral, or raindrops??
+ - ball/pixels bouncing off sides
+ */
 
 import processing.serial.*;
 import gab.opencv.*;
@@ -22,6 +28,8 @@ PImage img = createImage(27, 24, RGB); // LED is 27 pixels wide x 24 pixels tall
 
 int scaleFactor = 10;
 boolean isSpacebarPressed = false; // Track the state of the spacebar
+//boolean writtenSerial = false;
+int FACE = 50;
 
 void setup()
 {
@@ -31,7 +39,7 @@ void setup()
   opencv.loadCascade(OpenCV.CASCADE_FRONTALFACE);
   video.start();
 
-  frameRate(10);
+  frameRate(8);
   clearMatrix();
   noSmooth(); //for crisp resizing
 
@@ -39,7 +47,7 @@ void setup()
 
   // initialize serial communication
   String portName = Serial.list()[1]; //change the 0 to a 1 or 2 etc. to match your port
-  myPort = new Serial(this, portName, 922190);
+  myPort = new Serial(this, portName, 112500);
 }
 
 void draw() {
@@ -49,7 +57,7 @@ void draw() {
   opencv.loadImage(video);
   // Display the video feed on the right side of the window
   image(video, img.width*scaleFactor, 0);
-  
+
   // mirror image so moving left causes lights to move left
   //pushMatrix();
   //scale(-1,1);
@@ -59,12 +67,11 @@ void draw() {
   // Clear the LED matrix at the start of each frame to remove previous detections
   clearMatrix();
 
-if (isSpacebarPressed) {
+  if (isSpacebarPressed) {
     detectFace();
-}
-else {
-  activateRandomButtons();
-}
+  } else {
+    activateRandomButtons();
+  }
 
   updatePixels();
 
@@ -90,19 +97,23 @@ void activateRandomButtons() {
   for (int i = 0; i < numPixelsToActivate; i++) {
     int randomX = int(random(img.width));
     int randomY = int(random(img.height));
-    img.pixels[randomX + randomY * img.width] = color(100); // Randomly activated pixels colored red
+    img.pixels[randomX + randomY * img.width] = color(100); // Randomly activate pixels
   }
   img.updatePixels();
 }
+
 void writeSerial() {
   while (myPort.available() > 0) {
     print((char) myPort.read());
   }
 
-
   char red = (char)0;
   //print(red);
-
+  //char startChar = char(10);
+  //if (writtenSerial == false) {
+  //  myPort.write(startChar);
+  //    writtenSerial = true;
+  //}
   for (int i = img.width-1; i >= 0; i--) {
     for (int j = img.height-1; j >= 0; j--) {
 
@@ -110,8 +121,8 @@ void writeSerial() {
       if (img.pixels[i*img.height +j] == color(100)) {
         red = (char) 100;//(( img.pixels[i + j*img.width] >> 16 & 0xFF) >> 1);
         //print("x");
-      } else if (img.pixels[i*img.height +j] == color(150)) {
-        red = (char) 150;
+      } else if (img.pixels[i*img.height +j] == color(FACE)) {
+        red = (char) FACE                                           ;
       } else {
         red = (char) 0;
         //print("o");
@@ -119,9 +130,10 @@ void writeSerial() {
       myPort.write(red);
     }
   }
-  char startChar = 0b11111111; // send end of matrix
-  myPort.write(startChar);
-  println("writing end bit");
+  char endChar = 0b11111111; // send end of matrix
+  myPort.write(endChar);
+  //writtenSerial = false;
+  //println("writing end bit");
 }
 
 void updatePixels() {
@@ -154,7 +166,7 @@ void clearMatrix() {
 
 void detectFace() {
   Rectangle[] faces = opencv.detect(); // Detect faces
-  
+
   //trying to mirror camera
   //pushMatrix();
   //  scale(-1,1);
@@ -168,16 +180,16 @@ void detectFace() {
 
     // Highlight the area within the face detection
     highlightFace(ledX, ledY, ledW, ledH);
-
   }
-      //popMatrix();
+  //popMatrix();
 }
 
 void highlightFace(int x, int y, int w, int h) {
+  
   for (int i = x; i < x + w; i++) {
     for (int j = y; j < y + h; j++) {
       if (i >= 0 && i < img.width && j >= 0 && j < img.height) {
-        img.pixels[i + j * img.width] = color(100); // Set color for simulated 'click'
+        img.pixels[i + j * img.width] = color(FACE); // Set color for simulated 'click'
       }
     }
   }

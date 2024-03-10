@@ -34,12 +34,12 @@ int red, green, blue;
 
 int pixels[27 * 24];  //change to vars for readability; error
 
-// #define SERIAL_SIZE_RX 4000
+#define SERIAL_SIZE_RX 4000
 
 void setup() {
   pinMode(ledPin, OUTPUT);  // Set pin as OUTPUT
-  Serial.begin(922190);     // Start Serial communication at 9600 bps
-  // Serial.setRxBufferSize(SERIAL_SIZE_RX);
+  Serial.begin(112500);     // Start Serial communication 
+  Serial.setRxBufferSize(SERIAL_SIZE_RX);
 
   strip.begin();
   strip.show();
@@ -70,7 +70,12 @@ void updateGrid(const char* data) {
     if (col == char(100)) {
         strip.setPixelColor(i, j, int(random(255)), int(random(255)), int(random(255)));
 
-      } else {
+      } 
+      else if (col == char(50)) {
+        strip.setPixelColor(i,j,10,255,10);
+      }
+      
+      else {
         strip.setPixelColor(i, j, 0, 0, 0);
       }
     }
@@ -82,8 +87,11 @@ void gridBuffer(const byte inByte) {
   static char input_line[PIXEL_LENGTH];
   static unsigned int input_pos = 0;
 
+  // if (char(inByte) == char(10)){
+    // Serial.println("start char recieved!");
   switch (inByte) {
     case 0b11111111:  //end
+      Serial.println("end char recieved!");
       input_line[input_pos] = 0;
       updateGrid(input_line);
       input_pos = 0;
@@ -95,4 +103,5 @@ void gridBuffer(const byte inByte) {
       }
       break;
   }
+  // }
 }
