@@ -22,6 +22,7 @@ import org.opencv.core.Core;
 Serial myPort;  // Create object from Serial class
 Capture video;
 OpenCV opencv;
+//Rain drop;
 
 PImage img = createImage(27, 24, RGB); // LED is 27 pixels wide x 24 pixels tall
 
@@ -46,6 +47,9 @@ int xdir = 1;
 int ydir = 1;
 int xdir2 = 1;
 int ydir2 = -1;
+
+// for rain
+int x, y;
 
 void setup()
 {
@@ -87,7 +91,10 @@ void draw() {
   //popMatrix();
 
   // Clear the LED matrix at the start of each frame to remove previous detections
+if (!isDownArrowPressed) {
   clearMatrix();
+}
+    
 
 
 
@@ -97,6 +104,7 @@ void draw() {
     bounceAnimation();
   } else if (isDownArrowPressed) {
     animateFallingPixels();
+    //fallingPixels();
   } else {
     activateRandomButtons();
   }
@@ -123,7 +131,7 @@ void keyPressed() {
 
 void keyReleased() {
   if (key == ' ') { // Check if the released key is the spacebar
-    isSpacebarPressed = false;
+    isSpacebarPressed = false;   
   }
   if (key == CODED) {
     if (keyCode == UP) {
@@ -176,7 +184,7 @@ void writeSerial() {
 }
 
 void updatePixels() {
-  img.loadPixels();
+  //img.loadPixels();
 
   img.updatePixels();
   image(img, 0, 0, img.width*scaleFactor, img.height*scaleFactor);
@@ -280,8 +288,17 @@ void bounceAnimation() {
     }
   }
     updatePixels();
+    //img.updatePixels();
 
 }
+
+//Rain drop(){
+//  this.x = int(random(width));
+//  this.y = int(random(height));
+  
+  
+//}
+
 
 //void fallingPixels() {
 //  if (fallCounter % fallingSpeed == 0) {
@@ -297,21 +314,54 @@ void bounceAnimation() {
 //    }
 //  }
 //  fallCounter++;
+//  //updatePixels();
+//  img.updatePixels();
 //}
 
 // FIX THIS!
+//void animateFallingPixels() {
+  
+//  // Generate new pixels at the top row
+//    for (int x = 0; x < img.width/2; x++) {
+//      if (random(1) > 0.5) { // Randomly activate pixels
+//        img.pixels[x] = color(255, 0, 0); // Set color to red
+//      } else {
+//        img.pixels[x] = color(255); // Set color to white (off)
+//      }
+//    }
+    
+//  if (fallCounter % fallingSpeed == 0) {
+//    // Move all pixels down by one row
+//    println(img.height);
+//    for (int y = 0; y < img.height -1; y++) {
+//      for (int x = 0; x < img.width; x++) {
+//        int currentPixel = int(img.pixels[x + y * img.width]);
+//        //println(color(currentPixel),color(255));
+//        //if (currentPixel != color(255)) { // Check if the pixel is not white (active)
+//          // Move the pixel down by one row
+//          println("new row");
+//          img.pixels[x + (y + 1) * img.width] = img.pixels[x + y * img.width];//color(255,0,0);//currentPixel;
+//          img.pixels[x + y * img.width] = color(255); // Turn off the current pixel
+//          delay(100);
+//        //}
+//      }
+//    }
+    
+    //img.updatePixels();
+//    updatePixels();
+//  }
+//  fallCounter++;
+//}
+
 void animateFallingPixels() {
   if (fallCounter % fallingSpeed == 0) {
-
     // Move all pixels down by one row
+    println(img.height);
     for (int y = img.height - 2; y >= 0; y--) {
       for (int x = 0; x < img.width; x++) {
         int currentPixel = img.pixels[x + y * img.width];
-        println(color(currentPixel), color(255));
         if (currentPixel != color(255)) { // Check if the pixel is not white (active)
           // Move the pixel down by one row
-          println("new row");
-
           img.pixels[x + (y + 1) * img.width] = currentPixel;
           img.pixels[x + y * img.width] = color(255); // Turn off the current pixel
         }
@@ -320,14 +370,13 @@ void animateFallingPixels() {
     // Generate new pixels at the top row
     for (int x = 0; x < img.width; x++) {
       if (random(1) > 0.5) { // Randomly activate pixels
-        img.pixels[x] = color(255, 0, 0); // Set color to red
+        img.pixels[x] = color(RED); // Set color to red
       } else {
         img.pixels[x] = color(255); // Set color to white (off)
       }
     }
     //img.updatePixels();
-      updatePixels();
-
+    updatePixels();
   }
   fallCounter++;
 }
