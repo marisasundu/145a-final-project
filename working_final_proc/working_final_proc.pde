@@ -11,7 +11,6 @@ by Risa Sundu & David Shin
 /*to add:
  - slow down chaos mode
  - some type of abstract animation, or spiral, or raindrops??
- - ball/pixels bouncing off sides
  */
 
 import processing.serial.*;
@@ -29,6 +28,7 @@ PImage img = createImage(27, 24, RGB); // LED is 27 pixels wide x 24 pixels tall
 int scaleFactor = 10;
 boolean isSpacebarPressed = false; // Track the state of the spacebar
 boolean isUpArrowPressed = false;
+boolean isDownArrowPressed = false;
 //boolean writtenSerial = false;
 int BLUE = 50;
 int RED = 110;
@@ -37,6 +37,10 @@ int TEAL = 10;
 // vars for bounce animation
 float xpos, ypos, xpos2, ypos2;
 float speed = 8;
+
+// vars for falling animation
+int fallingSpeed = 2; // Speed of falling pixels
+int fallCounter = 0;
 
 int xdir = 1;
 int ydir = 1;
@@ -91,13 +95,12 @@ void draw() {
     detectFace();
   } else if (isUpArrowPressed) {
     bounceAnimation();
-  }
-  // if up arrow {
-  //animation();
-  else {
+  } else if (isDownArrowPressed) {
+    animateFallingPixels();
+  } else {
     activateRandomButtons();
   }
-  updatePixels();
+  //updatePixels();
 
   drawGrid();   //draw 27x24 grid for LED reference
 
@@ -112,6 +115,9 @@ void keyPressed() {
     if (keyCode == UP) {
       isUpArrowPressed = true;
     }
+    if (keyCode == DOWN) { // Check if the pressed key is the down arrow key
+      isDownArrowPressed = true;
+    }
   }
 }
 
@@ -122,6 +128,9 @@ void keyReleased() {
   if (key == CODED) {
     if (keyCode == UP) {
       isUpArrowPressed = false;
+    }
+    if (keyCode == DOWN) { // Check if the released key is the down arrow key
+      isDownArrowPressed = false;
     }
   }
 }
@@ -134,7 +143,8 @@ void activateRandomButtons() {
     int randomY = int(random(img.height));
     img.pixels[randomX + randomY * img.width] = color(100); // Randomly activate pixels
   }
-  img.updatePixels();
+  //img.updatePixels();
+  updatePixels();
 }
 
 void writeSerial() {
@@ -151,12 +161,11 @@ void writeSerial() {
   //}
   for (int i = img.width-1; i >= 0; i--) {
     for (int j = img.height-1; j >= 0; j--) {
-      if (img.pixels[i*img.height+j] == color(255)){
+      if (img.pixels[i*img.height+j] == color(255)) {
         data = (char) 0;
+      } else {
+        data = (char)(img.pixels[i*img.height+j]);
       }
-      else {
-      data = (char)(img.pixels[i*img.height+j]);
-      }                                           
       myPort.write(data);
     }
   }
@@ -228,19 +237,21 @@ void highlightFace(int x, int y, int w, int h) {
   img.pixels[x+(y+h-1)*img.width] = color(255);
   img.pixels[(x+w-1)+(y+h-1)*img.width] = color(255);
 
-  img.updatePixels();
+  //img.updatePixels();
+    updatePixels();
+
 }
 
 void bounceAnimation() {
   //background(150);
-  println("bouncing!");
+  //println("bouncing!");
 
   // standard bounce (i.e. pong)
   xpos = xpos + (speed* xdir);
   ypos = ypos + (speed*ydir);
   xpos2 = xpos2 + (speed* xdir2);
   ypos2 = ypos2 + (speed*ydir2);
-  
+
   // perlin noise movement
   //xpos = 300 * noise(0.005*frameCount) +50;
   //ypos = 300 * noise(0.005 * frameCount + 10000) + 50;
@@ -268,4 +279,55 @@ void bounceAnimation() {
       }
     }
   }
+    updatePixels();
+
+}
+
+//void fallingPixels() {
+//  if (fallCounter % fallingSpeed == 0) {
+//    for (int i =0; i < img.width; i++) {
+//      if(random(1)<0.5){
+//        img.pixels[i] = color(100);
+//      }
+//    }
+//    for (int i=0;i<img.width;i++){
+//      for(int j = 1;j<img.height;j++){
+//        img.pixels[i + j *img.width] = img.pixels[i+(j-1)*img.width];
+//      }
+//    }
+//  }
+//  fallCounter++;
+//}
+
+// FIX THIS!
+void animateFallingPixels() {
+  if (fallCounter % fallingSpeed == 0) {
+
+    // Move all pixels down by one row
+    for (int y = img.height - 2; y >= 0; y--) {
+      for (int x = 0; x < img.width; x++) {
+        int currentPixel = img.pixels[x + y * img.width];
+        println(color(currentPixel), color(255));
+        if (currentPixel != color(255)) { // Check if the pixel is not white (active)
+          // Move the pixel down by one row
+          println("new row");
+
+          img.pixels[x + (y + 1) * img.width] = currentPixel;
+          img.pixels[x + y * img.width] = color(255); // Turn off the current pixel
+        }
+      }
+    }
+    // Generate new pixels at the top row
+    for (int x = 0; x < img.width; x++) {
+      if (random(1) > 0.5) { // Randomly activate pixels
+        img.pixels[x] = color(255, 0, 0); // Set color to red
+      } else {
+        img.pixels[x] = color(255); // Set color to white (off)
+      }
+    }
+    //img.updatePixels();
+      updatePixels();
+
+  }
+  fallCounter++;
 }
