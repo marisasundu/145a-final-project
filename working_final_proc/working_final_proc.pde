@@ -292,67 +292,6 @@ void bounceAnimation() {
 
 }
 
-//Rain drop(){
-//  this.x = int(random(width));
-//  this.y = int(random(height));
-  
-  
-//}
-
-
-//void fallingPixels() {
-//  if (fallCounter % fallingSpeed == 0) {
-//    for (int i =0; i < img.width; i++) {
-//      if(random(1)<0.5){
-//        img.pixels[i] = color(100);
-//      }
-//    }
-//    for (int i=0;i<img.width;i++){
-//      for(int j = 1;j<img.height;j++){
-//        img.pixels[i + j *img.width] = img.pixels[i+(j-1)*img.width];
-//      }
-//    }
-//  }
-//  fallCounter++;
-//  //updatePixels();
-//  img.updatePixels();
-//}
-
-// FIX THIS!
-//void animateFallingPixels() {
-  
-//  // Generate new pixels at the top row
-//    for (int x = 0; x < img.width/2; x++) {
-//      if (random(1) > 0.5) { // Randomly activate pixels
-//        img.pixels[x] = color(255, 0, 0); // Set color to red
-//      } else {
-//        img.pixels[x] = color(255); // Set color to white (off)
-//      }
-//    }
-    
-//  if (fallCounter % fallingSpeed == 0) {
-//    // Move all pixels down by one row
-//    println(img.height);
-//    for (int y = 0; y < img.height -1; y++) {
-//      for (int x = 0; x < img.width; x++) {
-//        int currentPixel = int(img.pixels[x + y * img.width]);
-//        //println(color(currentPixel),color(255));
-//        //if (currentPixel != color(255)) { // Check if the pixel is not white (active)
-//          // Move the pixel down by one row
-//          println("new row");
-//          img.pixels[x + (y + 1) * img.width] = img.pixels[x + y * img.width];//color(255,0,0);//currentPixel;
-//          img.pixels[x + y * img.width] = color(255); // Turn off the current pixel
-//          delay(100);
-//        //}
-//      }
-//    }
-    
-    //img.updatePixels();
-//    updatePixels();
-//  }
-//  fallCounter++;
-//}
-
 void animateFallingPixels() {
   if (fallCounter % fallingSpeed == 0) {
     // Move all pixels down by one row
@@ -374,7 +313,7 @@ void animateFallingPixels() {
       } else {
         img.pixels[x] = color(255); // Set color to white (off)
       }
-    }
+    }     
     //img.updatePixels();
     updatePixels();
   }
